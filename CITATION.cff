@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "laz-tile-index: portable JSON sidecar spatial index for LAS/LAZ"
+authors:
+  - family-names: "Tasleem"
+    given-names: "Daud"
+date-released: 2026-04-26
+license: MIT
+repository-code: "https://github.com/daudee215/laz-tile-index"
+version: "0.1.0"

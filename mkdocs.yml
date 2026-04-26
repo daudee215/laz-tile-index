@@ -1,0 +1,13 @@
+site_name: laz-tile-index
+site_description: Portable JSON sidecar spatial tile index for LAS/LAZ point clouds.
+site_author: Daud Tasleem
+repo_url: https://github.com/daudee215/laz-tile-index
+theme:
+  name: readthedocs
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - API: api.md
+  - ADR 0001: adr/0001-spatial-index.md
+  - Roadmap: roadmap.md
+strict: true

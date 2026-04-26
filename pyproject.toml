@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "laz-tile-index"
+version = "0.1.0"
+description = "Portable JSON sidecar spatial tile index for LAS/LAZ point clouds, enabling out-of-core bbox queries without a database or LAStools."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Daud Tasleem", email = "daudtasleem215@gmail.com" }]
+keywords = ["lidar","las","laz","point-cloud","gis","spatial-index"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+  "numpy>=1.24",
+  "laspy>=2.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/daudee215/laz-tile-index"
+Issues = "https://github.com/daudee215/laz-tile-index/issues"
+Documentation = "https://github.com/daudee215/laz-tile-index#readme"
+
+[project.scripts]
+laz-tile-index = "laz_tile_index.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-benchmark>=4.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/laz_tile_index"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E","F","W","I","N","UP","B","SIM","C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src/laz_tile_index"]
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.hatch.metadata]
+allow-direct-references = true
