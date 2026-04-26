@@ -110,10 +110,12 @@ function loadIndex(index, label) {
   const [minx, miny, maxx, maxy] = activeIndex.header.bbox;
   const width = maxx - minx;
   const height = maxy - miny;
-  el.minx.value = Math.round(minx + width * 0.2);
-  el.miny.value = Math.round(miny + height * 0.2);
-  el.maxx.value = Math.round(minx + width * 0.58);
-  el.maxy.value = Math.round(miny + height * 0.58);
+  // Center the default bbox in the data extent (0.30 - 0.70 on both axes
+  // -> midpoint at 0.50, occupying the middle 40% of the canvas).
+  el.minx.value = Math.round(minx + width * 0.30);
+  el.miny.value = Math.round(miny + height * 0.30);
+  el.maxx.value = Math.round(minx + width * 0.70);
+  el.maxy.value = Math.round(miny + height * 0.70);
   el.fileName.textContent = label;
   previewQuery();
 }

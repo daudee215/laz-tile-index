@@ -410,6 +410,8 @@ input {
   border-radius: 8px;
   background: var(--panel-soft);
   cursor: pointer;
+  justify-items: center;
+  text-align: center;
 }
 
 .drop-zone:hover,
