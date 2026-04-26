@@ -1,487 +1,75 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>laz-tile-index — interactive demo</title>
-<meta name="description" content="See how laz-tile-index turns a LAS/LAZ point cloud into a uniform-grid spatial index. Drag a bbox query and watch the index decide which cells to read." />
-<style>
-  :root {
-    --bg: #0c0d10;
-    --surface: #14161b;
-    --surface-2: #1a1d24;
-    --border: #2a2e36;
-    --fg: #e7e9ed;
-    --muted: #8b94a3;
-    --accent: #4ad08c;
-    --accent-2: #6cd6ff;
-    --warn: #ffae5c;
-    --grid: #2c313a;
-    --cell-hit: rgba(108, 214, 255, 0.18);
-    --cell-hit-stroke: rgba(108, 214, 255, 0.55);
-    --bbox-fill: rgba(74, 208, 140, 0.12);
-    --bbox-stroke: rgba(74, 208, 140, 0.85);
-    --pt-default: #4a5460;
-    --pt-scan: #6cd6ff;
-    --pt-hit: #4ad08c;
-    --pt-radius: 1.6;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
-  header { padding: 28px clamp(16px, 5vw, 56px) 8px; }
-  header h1 { margin: 0 0 6px; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.02em; }
-  header p { margin: 0; max-width: 64ch; color: var(--muted); }
-  header a { color: var(--accent-2); text-decoration: none; border-bottom: 1px solid transparent; }
-  header a:hover { border-bottom-color: var(--accent-2); }
-  .layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 18px;
-    padding: 14px clamp(16px, 5vw, 56px) 28px;
-  }
-  @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
-  }
-  .stage {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px;
-    position: relative;
-    overflow: hidden;
-  }
-  .stage canvas {
-    width: 100%;
-    height: auto;
-    display: block;
-    background: var(--surface-2);
-    border-radius: 10px;
-    cursor: crosshair;
-    touch-action: none;
-  }
-  .legend {
-    display: flex; flex-wrap: wrap; gap: 16px;
-    margin-top: 10px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .legend .swatch { display: inline-block; width: 12px; height: 12px; vertical-align: middle; margin-right: 6px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.15); }
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .panel h2 { margin: 0 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-  .stat-row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-  .stat-row .num { font-variant-numeric: tabular-nums; font-weight: 600; }
-  .stat-row .num.accent { color: var(--accent); }
-  .stat-row .num.cyan { color: var(--accent-2); }
-  .controls { display: grid; gap: 10px; }
-  .controls label { display: grid; grid-template-columns: 110px 1fr 48px; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); }
-  .controls input[type="range"] { width: 100%; accent-color: var(--accent-2); }
-  .controls .val { text-align: right; color: var(--fg); font-variant-numeric: tabular-nums; }
-  .controls button {
-    appearance: none; cursor: pointer;
-    background: var(--surface-2); color: var(--fg);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 12px; font-size: 13px;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .controls button:hover { background: #21252e; border-color: #3a4150; }
-  .code {
-    background: #0a0b0e;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 12.5px;
-    color: #cdd3df;
-    overflow: auto;
-    line-height: 1.55;
-  }
-  .code .k { color: #d893ff; }
-  .code .s { color: #a8e6a3; }
-  .code .c { color: #6c7484; font-style: italic; }
-  .code .n { color: #6cd6ff; }
-  .footer { padding: 0 clamp(16px, 5vw, 56px) 36px; color: var(--muted); font-size: 13px; }
-  .footer a { color: var(--accent); text-decoration: none; }
-  .footer a:hover { text-decoration: underline; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
-</style>
-</head>
-<body>
-  <header>
-    <h1>laz-tile-index <span class="badge">interactive demo</span></h1>
-    <p>
-      A 2D walkthrough of what the library does on a real LAS file. Drag a query rectangle on the canvas to see which uniform-grid cells the index would read out-of-core, how many points it would scan inside those cells, and how many survive the bbox filter. Live data is synthetic so the page runs entirely in your browser. The actual library at
-      <a href="https://github.com/daudee215/laz-tile-index" target="_blank" rel="noopener">github.com/daudee215/laz-tile-index</a>
-      runs the same algorithm on real .las / .laz files via laspy.
-    </p>
-  </header>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LAZ Tile Index Lab</title>
+    <meta name="description" content="Browser demo for laz-tile-index, a portable JSON-sidecar spatial tile index for LAS and LAZ point clouds.">
+    <link rel="stylesheet" href="site/assets/laz.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="home-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Point cloud indexing lab</p>
+          <h1 id="home-title">Fast bbox planning for LAS and LAZ point clouds.</h1>
+          <p>
+            A small web companion for exploring JSON sidecar indexes, grid density,
+            query windows, and the CLI commands used by laz-tile-index.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="site/laz-tile-index.html">Open demo</a>
+            <a class="secondary-link" href="https://github.com/daudee215/laz-tile-index">GitHub repo</a>
+          </div>
+        </div>
+        <div class="hero-preview" aria-hidden="true">
+          <div class="scanline"></div>
+          <div class="preview-grid">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span class="hot"></span><span class="hot"></span><span></span>
+            <span></span><span class="hot"></span><span class="active"></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
 
-  <main class="layout">
-    <section class="stage">
-      <canvas id="cv" width="900" height="640" aria-label="Synthetic point cloud with uniform-grid spatial index. Drag to draw a bbox query."></canvas>
-      <div class="legend" aria-hidden="true">
-        <span><span class="swatch" style="background: var(--pt-default)"></span>indexed point</span>
-        <span><span class="swatch" style="background: var(--pt-scan)"></span>point scanned (cell read)</span>
-        <span><span class="swatch" style="background: var(--pt-hit)"></span>point returned (inside bbox)</span>
-        <span><span class="swatch" style="background: var(--cell-hit-stroke)"></span>cell intersected by query</span>
-      </div>
-    </section>
+      <section class="tools-section" aria-labelledby="tools-title">
+        <div class="section-head">
+          <p class="eyebrow">Tool</p>
+          <h2 id="tools-title">Available now</h2>
+        </div>
 
-    <aside class="panel" aria-label="Index statistics and controls">
-      <div>
-        <h2>Index</h2>
-        <div class="stat-row"><span>points</span><span class="num" id="s-pts">—</span></div>
-        <div class="stat-row"><span>grid</span><span class="num" id="s-grid">—</span></div>
-        <div class="stat-row"><span>cells used</span><span class="num" id="s-cells">—</span></div>
-      </div>
-      <div>
-        <h2>This query</h2>
-        <div class="stat-row"><span>cells read</span><span class="num cyan" id="q-cells">0</span></div>
-        <div class="stat-row"><span>points scanned</span><span class="num cyan" id="q-scan">0</span></div>
-        <div class="stat-row"><span>points returned</span><span class="num accent" id="q-hit">0</span></div>
-        <div class="stat-row"><span>read fraction</span><span class="num" id="q-frac">0%</span></div>
-      </div>
-      <div class="controls">
-        <h2>Parameters</h2>
-        <label>points
-          <input type="range" id="r-points" min="500" max="20000" step="500" value="5000" />
-          <span class="val" id="v-points">5000</span>
-        </label>
-        <label>per-cell target
-          <input type="range" id="r-target" min="40" max="1000" step="10" value="200" />
-          <span class="val" id="v-target">200</span>
-        </label>
-        <label>distribution
-          <input type="range" id="r-skew" min="0" max="100" step="1" value="55" />
-          <span class="val" id="v-skew">55</span>
-        </label>
-        <button id="btn-regen">Regenerate cloud</button>
-        <button id="btn-clear">Clear query</button>
-      </div>
-      <div>
-        <h2>Equivalent Python</h2>
-<pre class="code"><span class="k">from</span> laz_tile_index <span class="k">import</span> build_index, query_index
+        <div class="tools-grid">
+          <article class="tool-card">
+            <div>
+              <span class="tool-status">Live demo</span>
+              <h3>laz-tile-index</h3>
+              <p>
+                Inspect a portable sidecar index, tune bbox coordinates, estimate
+                intersecting grid cells, and copy build/query commands for the CLI.
+              </p>
+            </div>
+            <div class="tool-actions">
+              <a href="site/laz-tile-index.html">Open tool</a>
+              <a href="https://github.com/daudee215/laz-tile-index">Source</a>
+            </div>
+          </article>
 
-idx = build_index(<span class="s">"cloud.las"</span>,
-                  target_per_cell=<span class="n">200</span>)
-hits = query_index(idx, bbox=(<span id="cd-bx">0.0, 0.0, 1.0, 1.0</span>))
-<span class="c"># hits.indices.size points returned</span></pre>
-      </div>
-    </aside>
-  </main>
-
-  <div class="footer">
-    Source: <a href="https://github.com/daudee215/laz-tile-index" target="_blank" rel="noopener">github.com/daudee215/laz-tile-index</a> · MIT license · v0.1.0 · Built for the Tools section of <a href="https://github.com/daudee215/daudee-portfolio" target="_blank" rel="noopener">daudee.com</a>.
-  </div>
-
-<script>
-(() => {
-  const cv = document.getElementById('cv');
-  const ctx = cv.getContext('2d');
-  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-
-  // Logical drawing area (independent of CSS scaling).
-  const W = 900, H = 640;
-  function resizeForDPR() {
-    cv.width = W * dpr;
-    cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  resizeForDPR();
-  window.addEventListener('resize', () => { resizeForDPR(); draw(); });
-
-  const elPts   = document.getElementById('s-pts');
-  const elGrid  = document.getElementById('s-grid');
-  const elCells = document.getElementById('s-cells');
-  const elQCells = document.getElementById('q-cells');
-  const elQScan  = document.getElementById('q-scan');
-  const elQHit   = document.getElementById('q-hit');
-  const elQFrac  = document.getElementById('q-frac');
-  const elCdBx   = document.getElementById('cd-bx');
-
-  const rPoints = document.getElementById('r-points');
-  const rTarget = document.getElementById('r-target');
-  const rSkew   = document.getElementById('r-skew');
-  const vPoints = document.getElementById('v-points');
-  const vTarget = document.getElementById('v-target');
-  const vSkew   = document.getElementById('v-skew');
-  document.getElementById('btn-regen').addEventListener('click', () => { rebuild(true); });
-  document.getElementById('btn-clear').addEventListener('click', () => { bbox = null; redrawStats(); draw(); });
-
-  rPoints.addEventListener('input', () => { vPoints.textContent = rPoints.value; rebuild(true); });
-  rTarget.addEventListener('input', () => { vTarget.textContent = rTarget.value; rebuild(false); });
-  rSkew.addEventListener('input',   () => { vSkew.textContent   = rSkew.value;   rebuild(true); });
-
-  // Padding inside canvas for axes margin
-  const PAD = 24;
-  const PLOT = { x: PAD, y: PAD, w: W - 2*PAD, h: H - 2*PAD };
-
-  // Deterministic PRNG so the demo looks the same every load until user regenerates
-  function mulberry32(a) {
-    return function() {
-      a |= 0; a = a + 0x6D2B79F5 | 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  let seed = 1;
-  let pts = [];          // {x, y} in domain [0,1]^2
-  let grid = { nx: 1, ny: 1, cw: 1, ch: 1 };
-  let cellOf = [];       // index -> cell id
-  let cellMap = new Map();
-  let bbox = null;       // {x0,y0,x1,y1} in domain
-  let drag = null;       // {x0,y0,x1,y1} in canvas coords during drag
-
-  function genPoints(n, skew01) {
-    const rng = mulberry32(seed);
-    const out = new Array(n);
-    // skew = fraction of points coming from a few clusters (the rest uniform)
-    const clustered = Math.round(n * skew01);
-    const numClusters = 3 + Math.floor(rng() * 3);
-    const cs = [];
-    for (let k = 0; k < numClusters; k++) cs.push({ cx: 0.15 + 0.7*rng(), cy: 0.15 + 0.7*rng(), r: 0.04 + 0.07*rng() });
-    let i = 0;
-    for (; i < clustered; i++) {
-      const c = cs[i % numClusters];
-      // box-muller-ish via sum of uniforms
-      const u = (rng() + rng() + rng() + rng() - 2) / 2;
-      const v = (rng() + rng() + rng() + rng() - 2) / 2;
-      out[i] = { x: clamp01(c.cx + c.r * u), y: clamp01(c.cy + c.r * v) };
-    }
-    for (; i < n; i++) out[i] = { x: rng(), y: rng() };
-    return out;
-  }
-  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
-
-  function chooseGrid(n, target) {
-    // square-ish grid that targets ~`target` points per cell
-    const total = Math.max(1, Math.floor(n / target));
-    const side = Math.max(1, Math.round(Math.sqrt(total)));
-    return { nx: side, ny: side, cw: 1/side, ch: 1/side };
-  }
-
-  function buildIndex() {
-    const t0 = performance.now();
-    cellOf = new Int32Array(pts.length);
-    cellMap = new Map();
-    let used = 0;
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i];
-      const ci = Math.min(grid.nx-1, Math.floor(p.x / grid.cw));
-      const cj = Math.min(grid.ny-1, Math.floor(p.y / grid.ch));
-      const id = ci * grid.ny + cj;
-      cellOf[i] = id;
-      const arr = cellMap.get(id);
-      if (arr) arr.push(i); else { cellMap.set(id, [i]); used++; }
-    }
-    const t1 = performance.now();
-    return { used, ms: (t1 - t0).toFixed(1) };
-  }
-
-  function intersectingCells(b) {
-    const i0 = Math.max(0, Math.floor(b.x0 / grid.cw));
-    const i1 = Math.min(grid.nx-1, Math.floor(b.x1 / grid.cw));
-    const j0 = Math.max(0, Math.floor(b.y0 / grid.ch));
-    const j1 = Math.min(grid.ny-1, Math.floor(b.y1 / grid.ch));
-    return { i0, i1, j0, j1 };
-  }
-
-  function queryStats() {
-    if (!bbox) return { cells: 0, scan: 0, hit: 0 };
-    const r = intersectingCells(bbox);
-    let cells = 0, scan = 0, hit = 0;
-    for (let i = r.i0; i <= r.i1; i++) for (let j = r.j0; j <= r.j1; j++) {
-      const arr = cellMap.get(i * grid.ny + j);
-      if (!arr) continue;
-      cells++;
-      scan += arr.length;
-      for (let k = 0; k < arr.length; k++) {
-        const p = pts[arr[k]];
-        if (p.x >= bbox.x0 && p.x <= bbox.x1 && p.y >= bbox.y0 && p.y <= bbox.y1) hit++;
-      }
-    }
-    return { cells, scan, hit };
-  }
-
-  function redrawStats() {
-    elPts.textContent   = pts.length.toLocaleString();
-    elGrid.textContent  = `${grid.nx} × ${grid.ny}`;
-    elCells.textContent = cellMap.size.toLocaleString();
-    const q = queryStats();
-    elQCells.textContent = q.cells.toLocaleString();
-    elQScan.textContent  = q.scan.toLocaleString();
-    elQHit.textContent   = q.hit.toLocaleString();
-    elQFrac.textContent  = pts.length ? Math.round(100 * q.scan / pts.length) + '%' : '0%';
-    if (bbox) {
-      const f = (v) => v.toFixed(2);
-      elCdBx.textContent = `${f(bbox.x0)}, ${f(bbox.y0)}, ${f(bbox.x1)}, ${f(bbox.y1)}`;
-    } else {
-      elCdBx.textContent = '0.0, 0.0, 1.0, 1.0';
-    }
-  }
-
-  function rebuild(regen) {
-    if (regen) {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      pts = genPoints(parseInt(rPoints.value, 10), parseInt(rSkew.value, 10) / 100);
-    }
-    grid = chooseGrid(pts.length, parseInt(rTarget.value, 10));
-    buildIndex();
-    redrawStats();
-    draw();
-  }
-
-  // --- coords ---
-  function domainToCanvas(x, y) {
-    return [PLOT.x + x * PLOT.w, PLOT.y + (1 - y) * PLOT.h];
-  }
-  function canvasToDomain(cx, cy) {
-    const x = (cx - PLOT.x) / PLOT.w;
-    const y = 1 - (cy - PLOT.y) / PLOT.h;
-    return { x: clamp01(x), y: clamp01(y) };
-  }
-
-  // --- draw ---
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    // plot frame
-    ctx.fillStyle = 'var(--surface-2)';
-    ctx.fillStyle = '#1a1d24';
-    ctx.fillRect(PLOT.x, PLOT.y, PLOT.w, PLOT.h);
-
-    // intersected cells fill (under everything)
-    if (bbox) {
-      const r = intersectingCells(bbox);
-      ctx.fillStyle = 'rgba(108, 214, 255, 0.18)';
-      for (let i = r.i0; i <= r.i1; i++) for (let j = r.j0; j <= r.j1; j++) {
-        const x0 = i * grid.cw, y0 = j * grid.ch, x1 = (i+1)*grid.cw, y1 = (j+1)*grid.ch;
-        const [a, b] = domainToCanvas(x0, y1);
-        const [c, d] = domainToCanvas(x1, y0);
-        ctx.fillRect(a, b, c - a, d - b);
-      }
-    }
-
-    // grid lines
-    ctx.strokeStyle = '#2c313a';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    for (let i = 0; i <= grid.nx; i++) {
-      const [x, y] = domainToCanvas(i * grid.cw, 0);
-      const [, y2] = domainToCanvas(0, 1);
-      ctx.moveTo(x, y); ctx.lineTo(x, y2);
-    }
-    for (let j = 0; j <= grid.ny; j++) {
-      const [x, y] = domainToCanvas(0, j * grid.ch);
-      const [x2,]  = domainToCanvas(1, 0);
-      ctx.moveTo(x, y); ctx.lineTo(x2, y);
-    }
-    ctx.stroke();
-
-    // points
-    let scanned = new Uint8Array(pts.length);
-    let hit = new Uint8Array(pts.length);
-    if (bbox) {
-      const r = intersectingCells(bbox);
-      for (let i = r.i0; i <= r.i1; i++) for (let j = r.j0; j <= r.j1; j++) {
-        const arr = cellMap.get(i * grid.ny + j);
-        if (!arr) continue;
-        for (let k = 0; k < arr.length; k++) {
-          const idx = arr[k];
-          scanned[idx] = 1;
-          const p = pts[idx];
-          if (p.x >= bbox.x0 && p.x <= bbox.x1 && p.y >= bbox.y0 && p.y <= bbox.y1) hit[idx] = 1;
-        }
-      }
-    }
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i];
-      const [cx, cy] = domainToCanvas(p.x, p.y);
-      ctx.fillStyle = hit[i] ? '#4ad08c' : (scanned[i] ? '#6cd6ff' : '#4a5460');
-      ctx.beginPath();
-      ctx.arc(cx, cy, hit[i] ? 2.4 : 1.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // active drag rectangle
-    if (drag) {
-      ctx.strokeStyle = 'rgba(74, 208, 140, 0.85)';
-      ctx.fillStyle   = 'rgba(74, 208, 140, 0.12)';
-      const x = Math.min(drag.x0, drag.x1), y = Math.min(drag.y0, drag.y1);
-      const w = Math.abs(drag.x1 - drag.x0), h = Math.abs(drag.y1 - drag.y0);
-      ctx.fillRect(x, y, w, h);
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(x + 0.5, y + 0.5, w, h);
-    } else if (bbox) {
-      const [x0, y1] = domainToCanvas(bbox.x0, bbox.y1);
-      const [x1, y0] = domainToCanvas(bbox.x1, bbox.y0);
-      ctx.fillStyle   = 'rgba(74, 208, 140, 0.12)';
-      ctx.strokeStyle = 'rgba(74, 208, 140, 0.85)';
-      ctx.lineWidth = 1.2;
-      ctx.fillRect(x0, y1, x1 - x0, y0 - y1);
-      ctx.strokeRect(x0 + 0.5, y1 + 0.5, x1 - x0, y0 - y1);
-    }
-  }
-
-  // --- input ---
-  function localXY(ev) {
-    const rect = cv.getBoundingClientRect();
-    const sx = W / rect.width, sy = H / rect.height;
-    const t = (ev.touches && ev.touches[0]) ? ev.touches[0] : ev;
-    return { x: (t.clientX - rect.left) * sx, y: (t.clientY - rect.top) * sy };
-  }
-  function onDown(ev) {
-    ev.preventDefault();
-    const p = localXY(ev);
-    drag = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
-    cv.setPointerCapture && ev.pointerId !== undefined && cv.setPointerCapture(ev.pointerId);
-    draw();
-  }
-  function onMove(ev) {
-    if (!drag) return;
-    const p = localXY(ev);
-    drag.x1 = p.x; drag.y1 = p.y;
-    draw();
-  }
-  function onUp(ev) {
-    if (!drag) return;
-    const a = canvasToDomain(Math.min(drag.x0, drag.x1), Math.max(drag.y0, drag.y1));
-    const b = canvasToDomain(Math.max(drag.x0, drag.x1), Math.min(drag.y0, drag.y1));
-    bbox = { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
-    drag = null;
-    if ((bbox.x1 - bbox.x0) < 0.005 || (bbox.y1 - bbox.y0) < 0.005) bbox = null;
-    redrawStats();
-    draw();
-  }
-  cv.addEventListener('pointerdown', onDown);
-  cv.addEventListener('pointermove', onMove);
-  cv.addEventListener('pointerup', onUp);
-  cv.addEventListener('pointercancel', onUp);
-
-  // initial state
-  vPoints.textContent = rPoints.value;
-  vTarget.textContent = rTarget.value;
-  vSkew.textContent   = rSkew.value;
-  rebuild(true);
-  // friendly default query
-  bbox = { x0: 0.32, y0: 0.30, x1: 0.62, y1: 0.55 };
-  redrawStats();
-  draw();
-})();
-</script>
-</body>
+          <article class="tool-card coming-soon">
+            <div>
+              <span class="tool-status planned">Planned</span>
+              <h3>Directory Index</h3>
+              <p>
+                A future view for scanning many LAS/LAZ tiles, comparing coverage,
+                and building a project-level manifest for batch queries.
+              </p>
+            </div>
+            <div class="tool-actions">
+              <span>Roadmap</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
 </html>
