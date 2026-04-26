@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>laz-tile-index - point cloud sidecar explorer</title>
+    <meta name="description" content="Explore JSON sidecar grid indexes and bbox query windows for LAS and LAZ point clouds.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="laz-tile-index - point cloud sidecar explorer">
+    <meta property="og:description" content="Explore portable JSON sidecar indexes for LAS and LAZ bbox queries.">
+    <meta property="og:url" content="https://daudee215.github.io/laz-tile-index/site/laz-tile-index.html">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="laz-tile-index - point cloud sidecar explorer">
+    <meta name="twitter:description" content="Explore portable JSON sidecar indexes for LAS and LAZ bbox queries.">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f4c39'/%3E%3Cpath d='M14 20h36M14 32h36M14 44h36M20 14v36M32 14v36M44 14v36' stroke='%23ffffff' stroke-width='3'/%3E%3Ccircle cx='44' cy='20' r='5' fill='%23ffc857'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="assets/laz.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-labelledby="page-title">
+        <nav class="site-nav" aria-label="Website">
+          <a href="../index.html">Tools</a>
+          <a href="https://github.com/daudee215/laz-tile-index" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">LAS / LAZ spatial indexing</p>
+            <h1 id="page-title">laz-tile-index</h1>
+            <p class="lede">Explore a JSON sidecar grid and tune bbox queries before running the Python CLI.</p>
+          </div>
+          <div class="status-pill" id="status" role="status" aria-live="polite">Sample loaded</div>
+        </header>
+
+        <div class="layout-grid">
+          <aside class="control-panel" aria-label="Index controls">
+            <div class="section-title">Sidecar</div>
+            <div class="sample-row">
+              <select id="sampleSelect" aria-label="Sample index">
+                <option value="urban">urban-block.las.lzti.json</option>
+                <option value="corridor">rail-corridor.laz.lzti.json</option>
+              </select>
+              <button id="sampleButton" type="button">Load</button>
+            </div>
+
+            <label class="drop-zone" for="sidecarInput" id="dropZone">
+              <span class="drop-zone-title">Upload or drop .lzti.json</span>
+              <span id="fileName">Using sample sidecar</span>
+              <input id="sidecarInput" type="file" accept=".json,.lzti.json,application/json">
+            </label>
+            <p class="static-hint">Browser-only preview. LAS/LAZ point data stays in the CLI workflow.</p>
+
+            <div class="section-title">BBox</div>
+            <div class="bbox-grid">
+              <label>Min X<input id="minx" type="number" step="1"></label>
+              <label>Min Y<input id="miny" type="number" step="1"></label>
+              <label>Max X<input id="maxx" type="number" step="1"></label>
+              <label>Max Y<input id="maxy" type="number" step="1"></label>
+            </div>
+            <button id="queryButton" class="primary-button" type="button">Preview query</button>
+
+            <div class="section-title">CLI</div>
+            <pre class="command-box" id="commandBox"></pre>
+          </aside>
+
+          <section class="results-panel" aria-live="polite">
+            <div class="summary-band">
+              <div>
+                <span class="metric-label">Source</span>
+                <strong id="sourceValue">-</strong>
+              </div>
+              <div>
+                <span class="metric-label">Points</span>
+                <strong id="pointsValue">-</strong>
+              </div>
+              <div>
+                <span class="metric-label">Grid</span>
+                <strong id="gridValue">-</strong>
+              </div>
+              <div>
+                <span class="metric-label">Cells Hit</span>
+                <strong id="cellsValue">-</strong>
+              </div>
+            </div>
+
+            <section class="panel-block visual-block">
+              <div class="block-heading">
+                <h2>Spatial grid</h2>
+                <span class="block-meta" id="bboxMeta"></span>
+              </div>
+              <canvas id="gridCanvas" width="960" height="560"></canvas>
+            </section>
+
+            <div class="content-grid">
+              <section class="panel-block">
+                <div class="block-heading">
+                  <h2>Query result</h2>
+                </div>
+                <div class="result-stack" id="resultStack"></div>
+              </section>
+
+              <section class="panel-block">
+                <div class="block-heading">
+                  <h2>Sidecar health</h2>
+                </div>
+                <ul class="signal-list" id="healthList"></ul>
+              </section>
+            </div>
+
+            <section class="panel-block">
+              <div class="block-heading">
+                <h2>Intersecting cells</h2>
+              </div>
+              <div class="cell-list" id="cellList"></div>
+            </section>
+          </section>
+        </div>
+
+        <footer class="site-footer">
+          <span>Built by <a href="https://daudee.com" target="_blank" rel="noopener">Daud</a></span>
+          <span>|</span>
+          <a href="https://github.com/daudee215/laz-tile-index" target="_blank" rel="noopener">View source on GitHub</a>
+        </footer>
+      </section>
+    </main>
+
+    <script src="assets/laz.js"></script>
+  </body>
+</html>

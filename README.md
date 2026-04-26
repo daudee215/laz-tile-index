@@ -64,6 +64,17 @@ result = query_index(idx, bbox=(637000.0, 4789000.0, 637200.0, 4789200.0))
 print(f"{result.indices.size} points inside bbox")
 ```
 
+## Browser demo
+
+The repository includes a static frontend companion:
+
+```
+index.html
+site/laz-tile-index.html
+```
+
+Open `site/laz-tile-index.html` to preview a JSON sidecar grid, tune bbox coordinates, inspect intersecting cells, and copy matching CLI commands. The demo runs fully in the browser and does not parse LAS/LAZ point data.
+
 ## API reference
 
 The full API surface is documented in [docs/api.md](docs/api.md). The five public symbols:

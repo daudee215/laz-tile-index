@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LAZ Tile Index Lab</title>
+    <meta name="description" content="Browser demo for laz-tile-index, a portable JSON-sidecar spatial tile index for LAS and LAZ point clouds.">
+    <link rel="stylesheet" href="site/assets/laz.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="home-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Point cloud indexing lab</p>
+          <h1 id="home-title">Fast bbox planning for LAS and LAZ point clouds.</h1>
+          <p>
+            A small web companion for exploring JSON sidecar indexes, grid density,
+            query windows, and the CLI commands used by laz-tile-index.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="site/laz-tile-index.html">Open demo</a>
+            <a class="secondary-link" href="https://github.com/daudee215/laz-tile-index">GitHub repo</a>
+          </div>
+        </div>
+        <div class="hero-preview" aria-hidden="true">
+          <div class="scanline"></div>
+          <div class="preview-grid">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span class="hot"></span><span class="hot"></span><span></span>
+            <span></span><span class="hot"></span><span class="active"></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tools-section" aria-labelledby="tools-title">
+        <div class="section-head">
+          <p class="eyebrow">Tool</p>
+          <h2 id="tools-title">Available now</h2>
+        </div>
+
+        <div class="tools-grid">
+          <article class="tool-card">
+            <div>
+              <span class="tool-status">Live demo</span>
+              <h3>laz-tile-index</h3>
+              <p>
+                Inspect a portable sidecar index, tune bbox coordinates, estimate
+                intersecting grid cells, and copy build/query commands for the CLI.
+              </p>
+            </div>
+            <div class="tool-actions">
+              <a href="site/laz-tile-index.html">Open tool</a>
+              <a href="https://github.com/daudee215/laz-tile-index">Source</a>
+            </div>
+          </article>
+
+          <article class="tool-card coming-soon">
+            <div>
+              <span class="tool-status planned">Planned</span>
+              <h3>Directory Index</h3>
+              <p>
+                A future view for scanning many LAS/LAZ tiles, comparing coverage,
+                and building a project-level manifest for batch queries.
+              </p>
+            </div>
+            <div class="tool-actions">
+              <span>Roadmap</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
