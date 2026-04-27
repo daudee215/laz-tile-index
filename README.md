@@ -41,7 +41,7 @@ This library fills that gap: a portable, language-agnostic JSON sidecar that any
 Source signals that pointed at this gap (gisgap-pipeline run `2026-04-26T150706Z_pipeline-run`, topic `lidar-las-streaming`, signals=8, families={arxiv, github_issue, reddit, stackexchange}):
 
 - [QGIS GitHub issue: LAS file error in 3.44.3 that does not occur in 3.32.10](https://github.com/qgis/QGIS/issues/63906)
-- [GIS Stack Exchange: How can I efficiently lazy-load nearly 50k small LiDAR-derived GeoTIFFs in QGIS](https://gis.stackexchange.com/questions/501101)
+- [GIS Stack Exchange: How can I efficiently lazy-load nearly 50k small LiDAR-derived GeoTIFFs in QGIS]([https://gis.stackexchange.com/questions/501101](https://gis.stackexchange.com/questions/489664/how-can-i-efficiently-lazy-load-nearly-50k-small-lidar-derived-geotiffs-in-qgi))
 - [r/gis on Reddit: out-of-core lidar query patterns](https://www.reddit.com/r/gis/)
 
 ## Install
