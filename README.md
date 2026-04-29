@@ -4,11 +4,11 @@
 [![PyPI](https://img.shields.io/pypi/v/laz-tile-index.svg)](https://pypi.org/project/laz-tile-index/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Portable JSON-sidecar spatial tile index for LAS/LAZ point clouds.** Build once, query many — no database, no LAStools dependency, pure Python.
+**Portable JSON-sidecar spatial tile index for LAS/LAZ point clouds.** Build once, query many - no database, no LAStools dependency, pure Python.
 
 ## What it does
 
-`laz-tile-index` builds a small JSON sidecar (`<file>.lzti.json`) next to a LAS/LAZ point cloud that records a uniform-grid spatial index of point ranges. With the sidecar, any consumer can answer "give me the points inside this bbox" by reading only the cells that intersect the bbox — without loading the full file into memory and without a database.
+`laz-tile-index` builds a small JSON sidecar (`<file>.lzti.json`) next to a LAS/LAZ point cloud that records a uniform-grid spatial index of point ranges. With the sidecar, any consumer can answer "give me the points inside this bbox" by reading only the cells that intersect the bbox - without loading the full file into memory and without a database.
 
 Two operations:
 
@@ -82,7 +82,7 @@ The full API surface is documented in [docs/api.md](docs/api.md). The five publi
 - `build_index(src, *, target_per_cell, sidecar_path, reordered_path) -> GridIndex`
 - `load_index(sidecar_path) -> GridIndex`
 - `query_index(index, bbox) -> SpatialQueryResult`
-- `GridIndex`, `IndexHeader`, `SpatialQueryResult` — frozen dataclasses.
+- `GridIndex`, `IndexHeader`, `SpatialQueryResult` - frozen dataclasses.
 
 ## Benchmark
 
