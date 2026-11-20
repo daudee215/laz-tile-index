@@ -2,8 +2,11 @@
 
 ## Install
 
-```
-pip install laz-tile-index
+```bash
+git clone https://github.com/daudee215/laz-tile-index.git
+cd laz-tile-index
+python -m pip install .
+laz-tile-index --help
 ```
 
 ## Build an index

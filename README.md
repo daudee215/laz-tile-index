@@ -1,7 +1,6 @@
 # laz-tile-index
 
 [![CI](https://github.com/daudee215/laz-tile-index/actions/workflows/ci.yml/badge.svg)](https://github.com/daudee215/laz-tile-index/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/laz-tile-index.svg)](https://pypi.org/project/laz-tile-index/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Portable JSON-sidecar spatial tile index for LAS/LAZ point clouds.** Build once, query many - no database, no LAStools dependency, pure Python.
@@ -46,8 +45,11 @@ Source signals that pointed at this gap (gisgap-pipeline run `2026-04-26T150706Z
 
 ## Install
 
-```
-pip install laz-tile-index
+```bash
+git clone https://github.com/daudee215/laz-tile-index.git
+cd laz-tile-index
+python -m pip install .
+laz-tile-index --help
 ```
 
 Requires Python 3.10+. Runtime dependencies: numpy, laspy.
